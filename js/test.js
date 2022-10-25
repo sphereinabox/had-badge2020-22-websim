@@ -3,17 +3,17 @@ var all_tests = [];
 
 function test_setup() {
     test_state = {
-        state : new_state(),
-        state_after : null,
-        test_pass : true
+        state: new_state(),
+        state_after: null,
+        test_pass: true
     };
 }
 
-function assert_equal(a,b,msg) {
+function assert_equal(a, b, msg) {
     if (a === b) {
 
     } else {
-        debugger;
+        console.trace(a, b, msg);
         test_state.test_pass = false;
     }
 }
@@ -33,7 +33,7 @@ function test_advance() {
 //     assert_equal(2,2,"Number literals should match");
 // });
 
-add_test("NOP", function(){
+add_test("NOP", function () {
     // MOV R0 R0
     test_state.state.pc = 0x123;
     test_state.state.code[0x123] = 0b100_0000_0000;
@@ -41,51 +41,112 @@ add_test("NOP", function(){
     test_advance();
 
     // verify instruction pointer advanced
-    assert_equal(test_state.state_after.pc,0x124);
+    assert_equal(test_state.state_after.pc, 0x124);
     // verify flags still clear
-    assert_equal(test_state.state_after.c,0);
-    assert_equal(test_state.state_after.z,0);
-    assert_equal(test_state.state_after.v,0);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
 });
 
-add_test("NOP", function(){
+add_test("NOP", function () {
     // MOV R0 R0
     test_state.state.code[0] = 0b100_0000_0000;
     // set flags
     test_state.state.c = 1;
     test_state.state.z = 1;
     test_state.state.v = 1;
-    
+
     test_advance();
-    
+
     // verify flags still set
-    assert_equal(test_state.state_after.c,1);
-    assert_equal(test_state.state_after.z,1);
-    assert_equal(test_state.state_after.v,1);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 1);
 });
 
-add_test("NOP", function(){
-     // MOV R0 R0
-     test_state.state.pc = 0xFFF;
-     test_state.state.code[0xFFF] = 0b100_0000_0000;
- 
-     test_advance();
- 
-     // verify instruction pointer advanced, wrapping around
-     assert_equal(test_state.state_after.pc,0x000);
+add_test("NOP", function () {
+    // MOV R0 R0
+    test_state.state.pc = 0xFFF;
+    test_state.state.code[0xFFF] = 0b100_0000_0000;
+
+    test_advance();
+
+    // verify instruction pointer advanced, wrapping around
+    assert_equal(test_state.state_after.pc, 0x000);
 });
 
-// add_test("op1 ADD R2,R0", function(){
-//     // ADD RX,RY
-//     test_state.state.code[0] = 0b0001_0010_0000;
-//     test_state.state.regs[R0] = 0b1011;
-//     test_state.state.regs[R2] = 0b0111;
-//     test_advance();
-//     assert_equal(test_state.state_after.regs[R2],0b0010);
-//     assert_equal(test_state.state_after.c,1);
-//     assert_equal(test_state.state_after.z,0);
-//     assert_equal(test_state.state_after.v,0);
-// });
+add_test("NOP", function () {
+    // MOV R0 R0
+    test_state.state.code[0xFFF] = 0b100_0000_0000;
+    // set after stack overflow
+    test_state.state.sp = 0b110;
+
+    test_advance();
+
+    // verify instruction pointer didn't advance
+    assert_equal(test_state.state_after.pc, 0x000);
+});
+
+add_test("NOP", function () {
+    // MOV R0 R0
+    test_state.state.code[0xFFF] = 0b100_0000_0000;
+    // set after stack underflow
+    test_state.state.sp = 0b111;
+
+    test_advance();
+
+    // verify instruction pointer didn't advance
+    assert_equal(test_state.state_after.pc, 0x000);
+});
+
+add_test("op1 ADD R2,R0", function () {
+    // ADD RX,RY
+    test_state.state.code[0] = 0b0001_0010_0000;
+    test_state.state.regs[R0] = 0b1011;
+    test_state.state.regs[R2] = 0b0111;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R2], 0b0010);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op1 ADD R2,R0", function () {
+    // ADD RX,RY
+    test_state.state.code[0] = 0b0001_0010_0000;
+    test_state.state.regs[R0] = 0b0001;
+    test_state.state.regs[R2] = 0b1111;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R2], 0b0000);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op1 ADD R2,R0", function () {
+    // ADD RX,RY
+    test_state.state.code[0] = 0b0001_0010_0000;
+    test_state.state.regs[R0] = 0b1001;
+    test_state.state.regs[R2] = 0b1110;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R2], 0b0111);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 1);
+});
+
+add_test("op2 ADC", function () {
+    // ADC R1,R7
+    test_state.state.code[0] = 0b0010_0001_0111;
+    test_state.state.regs[R1] = 0b0100;
+    test_state.state.regs[R7] = 0b1011;
+    test_state.state.c = 1;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R1], 0b0000);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
 
 var consoletext_element = document.getElementById("consoletext");
 consoletext_element.value = "";
