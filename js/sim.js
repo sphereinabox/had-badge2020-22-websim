@@ -78,24 +78,59 @@ function advance(state) {
             break;
         case 3:
             // SUB RX,RY
+            temp = rx_val - ry_val;
+            temp_signed = rx_val_signed - ry_val_signed;
+            ns.regs[RX] = (temp) & 0xF;
+            ns.c = (ry_val < rx_val ? 1 : 0);
+            ns.z = ((temp & 0xF) === 0 ? 1 : 0);
+            ns.v = (-8 <= temp_signed && temp_signed <= 7 ? 0 : 1);
             break;
         case 4:
             // SBB RX,RY
+            temp = rx_val - ry_val - (state.c == 0 ? 1 : 0);
+            temp_signed = rx_val_signed - ry_val_signed - (state.c == 0 ? 1 : 0);
+            ns.regs[RX] = (temp) & 0xF;
+            ns.c = (ry_val < rx_val - (state.c == 0 ? 1 : 0) ? 1 : 0);
+            ns.z = ((temp & 0xF) === 0 ? 1 : 0);
+            ns.v = (-8 <= temp_signed && temp_signed <= 7 ? 0 : 1);
             break;
         case 5:
             // OR RX,RY
+            temp = rx_val | ry_val;
+            ns.regs[RX] = temp;
+            ns.z = (temp === 0 ? 1 : 0);
             break;
         case 6:
             // AND RX,RY
+            temp = rx_val & ry_val;
+            ns.regs[RX] = temp;
+            ns.z = (temp === 0 ? 1 : 0);
             break;
         case 7:
             // XOR RX,RY
+            temp = rx_val ^ ry_val;
+            ns.regs[RX] = temp;
+            ns.z = (temp === 0 ? 1 : 0);
             break;
         case 8:
             // MOV RX,RY
+            ns.regs[RX] = ry_val;
+            if (RX == JSR) {
+                // TODO: jump subroutine to PCH/PCM/JSR
+            }
+            if (RX == PCL) {
+                // TODO: jump long to PCH/PCM/PCL?
+            }
             break;
         case 9:
             // MOV RX,#N
+            ns.regs[RX] = RY;
+            if (RX == JSR) {
+                // TODO: jump subroutine to PCH/PCM/JSR
+            }
+            if (RX == PCL) {
+                // TODO: jump long to PCH/PCM/PCL?
+            }
             break;
         case 0xA:
             // MOV [XY],R0
