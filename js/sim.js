@@ -7,7 +7,7 @@ var R9 = 9, OUT = 10, IN = 11, JSR = 12, PCL = 13, PCM = 14, PCH = 15;
 
 function new_state() {
     // return fresh state of entire machine
-    var mem = [], code = [];
+    var mem = Array(256), code = Array(4096);
     mem.fill(0, 0, 256);
     code.fill(0, 0, 4096);
     return {
@@ -134,56 +134,104 @@ function advance(state) {
             break;
         case 0xA:
             // MOV [XY],R0
+            temp = (state.regs[RX] << 4) | state.regs[RY]
+            ns.mem[temp] = state.regs[R0];
             break;
         case 0xB:
             // MOV R0,[XY]
+            temp = (state.regs[RX] << 4) | state.regs[RY]
+            ns.regs[R0] = state.mem[temp];
             break;
         case 0xC:
             // MOV [NN],R0
+            temp = (RX << 4) | RY
+            ns.mem[temp] = state.regs[R0];
             break;
         case 0xD:
             // MOV R0,[NN]
+            temp = (RX << 4) | RY;
+            ns.regs[R0] = state.mem[temp];
             break;
         case 0xE:
             // MOV PC,NN
+            ns.regs[PCH] = RX;
+            ns.regs[PCM] = RY;
             break;
         case 0xF:
             // JR NN
+            temp = (RX << 4) | RY;
+            if (temp & 0x80 != 0) {
+                // sign extend
+                temp |= 0xF00;
+            }
+            ns.pc = 0xFFF & (ns.pc + temp);
             break;
         case 0:
             switch ((op >> 4) & 0xF) {
                 case 0:
                     // CP R0,N
+                    temp = state.regs[R0] - RY;
+                    ns.z = temp === 0 ? 1 : 0;
+                    ns.c = temp >= 0 ? 1 : 0;
                     break;
                 case 1:
                     // ADD R0,N
+                    temp = state.regs[R0] + RY;
+                    ns.regs[R0] = temp & 0xF;
+                    ns.z = ns.regs[R0] === 0 ? 1 : 0;
+                    ns.c = temp > 0xF ? 1 : 0;
                     break;
                 case 2:
                     // INC RY
+                    temp = state.regs[RY] + 1
+                    ns.regs[RY] = temp & 0xF;
+                    ns.z = ns.regs[RY] === 0 ? 1 : 0;
+                    ns.c = temp > 0xF ? 1 : 0;
                     break;
                 case 3:
                     // DEC RY
+                    temp = 0xF & (state.regs[RY] + 0b1111);
+                    ns.regs[RY] = temp;
+                    ns.z = temp === 0 ? 1 : 0;
+                    ns.c = temp === 0b1111 ? 0 : 1;
                     break;
                 case 4:
                     // DSZ RY
+                    temp = 0xF & (state.regs[RY] + 0b1111);
+                    ns.regs[RY] = temp;
+                    if (temp === 0) {
+                        ns.pc = 0xFFF & (ns.pc + 1);
+                    }
                     break;
                 case 5:
                     // OR R0,N
+                    temp = state.regs[R0] | RY;
+                    ns.regs[R0] = temp;
+                    ns.c = 1;
+                    ns.z = temp === 0 ? 1 : 0;
                     break;
                 case 6:
                     // AND R0,N
+                    temp = state.regs[R0] & RY;
+                    ns.regs[R0] = temp;
+                    ns.c = 0;
+                    ns.z = temp === 0 ? 1 : 0;
                     break;
                 case 7:
-                    // AND R0,N
+                    // XOR R0,N
+                    temp = state.regs[R0] ^ RY;
+                    ns.regs[R0] = temp;
+                    ns.c = state.c === 0 ? 1 : 0;
+                    ns.z = temp === 0 ? 1 : 0;
                     break;
                 case 8:
-                    // XOR R0,N
-                    break;
-                case 9:
                     // EXR N
                     break;
-                case 0xA:
+                case 9:
                     // BIT RG,M
+                    break;
+                case 0xA:
+                    // BSET RG,M
                     break;
                 case 0xB:
                     // BCLR RG,M

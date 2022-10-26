@@ -272,6 +272,215 @@ add_test("op9 MOV", function () {
     assert_equal(test_state.state_after.v, 0);
 });
 
+add_test("op10 MOV", function () {
+    // MOV [R6:R4],R0
+    test_state.state.code[0] = 0b1010_1001_0100;
+    test_state.state.regs[R0] = 0b1111;
+    test_state.state.regs[R9] = 0b0001;
+    test_state.state.regs[R4] = 0b0010;
+    test_state.state.mem[0x12] = 0b0101;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[0x12], 0b1111);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op11 MOV", function () {
+    // MOV R0,[R4,R7]
+    test_state.state.code[0] = 0b1011_0100_0111;
+    test_state.state.regs[R0] = 0b0011;
+    test_state.state.regs[R4] = 0b0101;
+    test_state.state.regs[R7] = 0b1010;
+    test_state.state.mem[0x5A] = 0b1110;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R0], 0b1110);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op12 MOV", function () {
+    // MOV [0x19],R0
+    test_state.state.code[0] = 0b1100_0001_1001;
+    test_state.state.regs[R0] = 0b1001;
+    test_state.state.mem[0x19] = 0b0111;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[0x19], 0b1001);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op13 MOV", function () {
+    // MOV R0,[0xE2]
+    test_state.state.code[0] = 0b1101_1110_0010;
+    test_state.state.regs[R0] = 0b0011;
+    test_state.state.mem[0xE2] = 0b1110;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R0], 0b1110);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op14 MOV", function () {
+    // MOV PC,0x31
+    test_state.state.code[0] = 0b1110_0011_0001;
+    test_state.state.regs[PCM] = 0b0110;
+    test_state.state.regs[PCH] = 0b1010;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[PCM], 0b0001);
+    assert_equal(test_state.state_after.regs[PCH], 0b0011);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op15 JR", function () {
+    // JR -3
+    test_state.state.code[0b0000_0100_0000] = 0b1111_1111_1101;
+    test_state.state.pc = 0b0000_0100_0000;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.pc, 0b0000_0011_1110);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.0 CP", function () {
+    // CP R0,5
+    test_state.state.code[0] = 0b0000_0000_0101;
+    test_state.state.regs[R0] = 0b0101;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R0], 0b0101);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.1 ADD", function () {
+    // ADD R0,14
+    test_state.state.code[0] = 0b0000_0001_1110;
+    test_state.state.regs[R0] = 0b0010;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R0], 0b0000);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.2 INC RY", function () {
+    // INC R3
+    test_state.state.code[0] = 0b0000_0010_0011;
+    test_state.state.regs[R3] = 0b1111;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R3], 0b0000);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.3 DEC RY", function () {
+    // DEC R8
+    test_state.state.code[0] = 0b0000_0011_1000;
+    test_state.state.regs[R8] = 0b0010;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R8], 0b0001);
+    assert_equal(test_state.state_after.c, 1); // p23 unclear, text says will set flag but value shown is with flag reset
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.4 DSZ RY", function () {
+    // DSZ R3
+    var pc = 0b1010_1000_0000;
+    test_state.state.pc = pc;
+    test_state.state.code[pc] = 0b0000_0100_0011;
+    test_state.state.regs[R3] = 0b0001;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R3], 0b0000);
+    assert_equal(test_state.state_after.pc, 0b1010_1000_0010);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.5 OR R0,N", function () {
+    // OR R0,6
+    test_state.state.code[0] = 0b0000_0101_0110;
+    test_state.state.regs[R0] = 0b0011;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R0], 0b0111);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.6 AND R0,N", function () {
+    // AND R0,10
+    test_state.state.code[0] = 0b0000_0110_1010;
+    test_state.state.regs[R0] = 0b1100;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R0], 0b1000);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.7 XOR R0,N", function () {
+    // XOR R0,3
+    test_state.state.code[0] = 0b0000_0111_0011;
+    test_state.state.regs[R0] = 0b1001;
+    test_state.state.c = 1;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.regs[R0], 0b1010);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
 var consoletext_element = document.getElementById("consoletext");
 consoletext_element.value = "";
 function print(s) {
