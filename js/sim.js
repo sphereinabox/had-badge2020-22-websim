@@ -287,14 +287,33 @@ function advance(state) {
                     break;
                 case 0xD:
                     // RRC RY
+                    ns.mem[RY] = (state.mem[RY] >> 1) | (state.c == 1 ? 0x8 : 0);
+                    ns.c = state.mem[RY] & 1;
+                    ns.z = ns.mem[RY] == 0 ? 1 : 0;
                     break;
                 case 0xE:
                     // RET R0,N
+                    ns.mem[R0] = N;
+                    // stack pointer points to where next stack entry would be pushed
+                    // so to "pop" I need to start back earlier
+                    ns.pc = ((state.mem[0x0D + state.sp * 3]) |
+                        (state.mem[0x0E + state.sp * 3] << 4) |
+                        (state.mem[0x0F + state.sp * 3] << 8));
+                    ns.sp = 0b111 & (ns.sp + 0b111); // subtract 1
                     break;
                 case 0xF:
                     // SKIP F,M
+                    temp = M == 0 ? 4 : M;
+                    if (RG == 0 && state.c == 1) {  // C
+                        ns.pc += temp;
+                    } else if (RG == 1 && state.c == 0) { // NC
+                        ns.pc += temp;
+                    } else if (RG == 2 && state.z == 1) { // Z
+                        ns.pc += temp;
+                    } else if (RG == 3 && state.z == 0) { // NZ
+                        ns.pc += temp;
+                    }
                     break;
-
             }
             break;
     }

@@ -608,7 +608,6 @@ add_test("op0.11 BCLR RG,M", function () {
     assert_equal(test_state.state_after.v, 1);
 });
 
-
 add_test("op0.12 BTG RG,M", function () {
     // BTG R2,0
     test_state.state.code[0] = 0b0000_1100_1000;
@@ -635,6 +634,60 @@ add_test("op0.12 BTG RG,M", function () {
     test_advance();
     assert_equal(test_state.state_after.mem[0x0A], 0b0111);
     assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.13 RRC RY", function () {
+    // RRC R4
+    test_state.state.code[0] = 0b0000_1101_0100;
+    test_state.state.mem[R4] = 0b0100;
+    test_state.state.c = 1;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[R4], 0b1010);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.14 RET R0,N", function () {
+    // RET R0,4
+    var pc = 0b0010_0101_1100;
+    test_state.state.pc = pc;
+    test_state.state.code[pc] = 0b0000_1110_0100;
+    test_state.state.mem[R0] = 0b1010;
+    test_state.state.sp = 0b010;
+    test_state.state.mem[0x10] = 0b1111;
+    test_state.state.mem[0x11] = 0b0000;
+    test_state.state.mem[0x12] = 0b0000;
+    test_state.state.mem[0x13] = 0b1011;
+    test_state.state.mem[0x14] = 0b1100;
+    test_state.state.mem[0x15] = 0b0001;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[R0], 0b0100);
+    assert_equal(test_state.state_after.sp, 0b001);
+    assert_equal(test_state.state_after.pc, 0b0001_1100_1011);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.15 SKIP F,M", function () {
+    // SKIP nc,#2
+    var pc = 0b0000_1000_1101;
+    test_state.state.pc = pc;
+    test_state.state.code[pc] = 0b0000_1111_0110;
+    test_state.state.c = 0;
+    test_state.state.z = 1;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.pc, 0b0000_1001_0000);
+    assert_equal(test_state.state_after.c, 0);
     assert_equal(test_state.state_after.z, 1);
     assert_equal(test_state.state_after.v, 0);
 });
