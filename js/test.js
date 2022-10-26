@@ -467,18 +467,83 @@ add_test("op0.6 AND R0,N", function () {
     assert_equal(test_state.state_after.v, 0);
 });
 
-add_test("op0.7 XOR R0,N", function () {
-    // XOR R0,3
-    test_state.state.code[0] = 0b0000_0111_0011;
-    test_state.state.regs[R0] = 0b1001;
-    test_state.state.c = 1;
-    test_state.state.z = 0;
+add_test("op0.8 EXR N", function () {
+    // EXR 10
+    test_state.state.code[0] = 0b0000_1000_1010;
+    test_state.state.regs[R0] = 0b1011;
+    test_state.state.regs[R1] = 0b0110;
+    test_state.state.regs[R2] = 0b1110;
+    test_state.state.regs[R3] = 0b0101;
+    test_state.state.regs[R4] = 0b0001;
+    test_state.state.regs[R5] = 0b1100;
+    test_state.state.regs[R6] = 0b0101;
+    test_state.state.regs[R7] = 0b1011;
+    test_state.state.regs[R8] = 0b0100;
+    test_state.state.regs[R9] = 0b1000;
+    test_state.state.regs[OUT] = 0b1111;
+    test_state.state.mem[0xE0] = 0b1110;
+    test_state.state.mem[0xE1] = 0b1001;
+    test_state.state.mem[0xE2] = 0b0010;
+    test_state.state.mem[0xE3] = 0b1110;
+    test_state.state.mem[0xE4] = 0b1100;
+    test_state.state.mem[0xE5] = 0b0000;
+    test_state.state.mem[0xE6] = 0b1101;
+    test_state.state.mem[0xE7] = 0b0111;
+    test_state.state.mem[0xE8] = 0b1101;
+    test_state.state.mem[0xE9] = 0b0011;
+    test_state.state.mem[0xEA] = 0b0001;
+    test_advance();
+    test_advance(test_state.state_after.regs[R0], 0b1110);
+    test_advance(test_state.state_after.regs[R1], 0b1001);
+    test_advance(test_state.state_after.regs[R2], 0b0010);
+    test_advance(test_state.state_after.regs[R3], 0b1110);
+    test_advance(test_state.state_after.regs[R4], 0b1100);
+    test_advance(test_state.state_after.regs[R5], 0b0000);
+    test_advance(test_state.state_after.regs[R6], 0b1101);
+    test_advance(test_state.state_after.regs[R7], 0b0111);
+    test_advance(test_state.state_after.regs[R8], 0b1101);
+    test_advance(test_state.state_after.regs[R9], 0b0011);
+    test_advance(test_state.state_after.regs[OUT], 0b1111);
+    test_advance(test_state.state_after.mem[0xE0], 0b1011);
+    test_advance(test_state.state_after.mem[0xE1], 0b0110);
+    test_advance(test_state.state_after.mem[0xE2], 0b1110);
+    test_advance(test_state.state_after.mem[0xE3], 0b0101);
+    test_advance(test_state.state_after.mem[0xE4], 0b0001);
+    test_advance(test_state.state_after.mem[0xE5], 0b1100);
+    test_advance(test_state.state_after.mem[0xE6], 0b0101);
+    test_advance(test_state.state_after.mem[0xE7], 0b1011);
+    test_advance(test_state.state_after.mem[0xE8], 0b0100);
+    test_advance(test_state.state_after.mem[0xE9], 0b1000);
+    test_advance(test_state.state_after.mem[0xEA], 0b0001);
+});
+
+add_test("op0.9 BIT RG,M", function () {
+    // BIT R2,3
+    test_state.state.code[0] = 0b0000_1001_1011;
+    test_state.state.regs[R2] = 0b1101;
+    test_state.state.c = 0;
+    test_state.state.z = 1;
     test_state.state.v = 0;
     test_advance();
-    assert_equal(test_state.state_after.regs[R0], 0b1010);
+    assert_equal(test_state.state_after.regs[R2], 0b1101);
     assert_equal(test_state.state_after.c, 0);
     assert_equal(test_state.state_after.z, 0);
     assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.9 BIT RG,M", function () {
+    // BIT R3,0
+    test_state.state.code[0] = 0b0000_1001_1100;
+    test_state.state.mem[0x0B] = 0b1100;
+    test_state.state.mem[0xF3] = 0b1000; // WRFLAGS
+    test_state.state.mem[0xFB] = 0b1011;
+    test_state.state.c = 0;
+    test_state.state.z = 0;
+    test_state.state.v = 1;
+    test_advance();
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 1);
 });
 
 var consoletext_element = document.getElementById("consoletext");

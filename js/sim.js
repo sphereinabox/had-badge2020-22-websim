@@ -2,8 +2,11 @@
 // register names, bit encoding
 var R0 = 0, R1 = 1, R2 = 2, R3 = 3, R4 = 4, R5 = 5, R6 = 6, R7 = 7, R8 = 8;
 var R9 = 9, OUT = 10, IN = 11, JSR = 12, PCL = 13, PCM = 14, PCH = 15;
+var WRFLAGS = 0xF3;
 
 // status register has 
+
+// TODO: combine registers and memory
 
 function new_state() {
     // return fresh state of entire machine
@@ -48,6 +51,8 @@ function advance(state) {
     var RY = op & 0xF;
     var N = op & 0xF;
     var NN = op & 0xFF; // ?
+    var RG = (op >> 2) & 0b11;
+    var M = op & 0b11;
 
     var temp, temp_signed;
 
@@ -226,9 +231,24 @@ function advance(state) {
                     break;
                 case 8:
                     // EXR N
+                    var c = RY === 0 ? 16 : RY;
+                    for (var i = 0; i < c; i++) {
+                        ns.regs[i] = state.mem[0x0E + i];
+                        ns.mem[0x0E + i] = state.regs[i];
+                    }
                     break;
                 case 9:
                     // BIT RG,M
+                    temp = state.regs[RG];
+                    if (RG == 3) {
+                        // WRFLAGS bit 1
+                        if (state.mem[WRFLAGS] & 0x2 != 0) {
+                            temp = state.mem[0xFB];
+                        } else {
+                            temp = state.mem[0x0B];
+                        }
+                    }
+                    ns.z = ((temp & (1 << M)) === 0) ? 1 : 0;
                     break;
                 case 0xA:
                     // BSET RG,M
