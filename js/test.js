@@ -541,9 +541,102 @@ add_test("op0.9 BIT RG,M", function () {
     test_state.state.z = 0;
     test_state.state.v = 1;
     test_advance();
+    assert_equal(test_state.state_after.mem[0x0B], 0b1100);
+    assert_equal(test_state.state_after.mem[0xFB], 0b1011);
     assert_equal(test_state.state_after.c, 0);
     assert_equal(test_state.state_after.z, 1);
     assert_equal(test_state.state_after.v, 1);
+});
+
+add_test("op0.10 BSET RG,M", function () {
+    // BSET R1,2
+    test_state.state.code[0] = 0b0000_1010_0110;
+    test_state.state.mem[R1] = 0b1000;
+    test_state.state.c = 0;
+    test_state.state.z = 1;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[R1], 0b1100);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.10 BSET RG,M", function () {
+    // BSET R3,3
+    test_state.state.code[0] = 0b0000_1010_1111;
+    test_state.state.mem[0x0A] = 0b0000;
+    test_state.state.mem[0xF3] = 0b1011; // WRFLAGS
+    test_state.state.mem[0xFA] = 0b1000;
+    test_state.state.c = 0;
+    test_state.state.z = 1;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[0xFA], 0b1000);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.11 BCLR RG,M", function () {
+    // BCLR R0,1
+    test_state.state.code[0] = 0b0000_1011_0001;
+    test_state.state.mem[R0] = 0b1111;
+    test_state.state.c = 0;
+    test_state.state.z = 1;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[R0], 0b1101);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.11 BCLR RG,M", function () {
+    // BCLR R3,1
+    test_state.state.code[0] = 0b0000_1011_1101;
+    test_state.state.mem[0x0A] = 0b1110;
+    test_state.state.mem[0xF3] = 0b1101; // WRFLAGS
+    test_state.state.mem[0xFA] = 0b1100;
+    test_state.state.c = 1;
+    test_state.state.z = 0;
+    test_state.state.v = 1;
+    test_advance();
+    assert_equal(test_state.state_after.mem[0xFA], 0b1100);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 0);
+    assert_equal(test_state.state_after.v, 1);
+});
+
+
+add_test("op0.12 BTG RG,M", function () {
+    // BTG R2,0
+    test_state.state.code[0] = 0b0000_1100_1000;
+    test_state.state.mem[R2] = 0b0101;
+    test_state.state.c = 0;
+    test_state.state.z = 1;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[R2], 0b0100);
+    assert_equal(test_state.state_after.c, 0);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
+});
+
+add_test("op0.12 BTG RG,M", function () {
+    // BCLR R3,3
+    test_state.state.code[0] = 0b0000_1100_1111;
+    test_state.state.mem[0x0A] = 0b1111;
+    test_state.state.mem[0xF3] = 0b0101; // WRFLAGS
+    test_state.state.mem[0xFA] = 0b0111;
+    test_state.state.c = 1;
+    test_state.state.z = 1;
+    test_state.state.v = 0;
+    test_advance();
+    assert_equal(test_state.state_after.mem[0x0A], 0b0111);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 0);
 });
 
 var consoletext_element = document.getElementById("consoletext");

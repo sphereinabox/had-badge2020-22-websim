@@ -233,8 +233,10 @@ function advance(state) {
                     if (RG == 3) {
                         // WRFLAGS bit 1
                         if (state.mem[WRFLAGS] & 0x2 != 0) {
-                            temp = state.mem[0xFB];
+                            // alternate IN location
+                            temp = state.mem[0xFB]; // Should this be FA?
                         } else {
+                            // IN
                             temp = state.mem[0x0B];
                         }
                     }
@@ -242,12 +244,46 @@ function advance(state) {
                     break;
                 case 0xA:
                     // BSET RG,M
+                    temp = RG;
+                    if (RG == 3) {
+                        // WRFLAGS bit 1
+                        if ((state.mem[WRFLAGS] & 0x2) != 0) {
+                            // alternate OUT location
+                            temp = 0xFA;
+                        } else {
+                            // OUT
+                            temp = 0x0A;
+                        }
+                    }
+                    ns.mem[temp] = ns.mem[temp] | (1 << M);
                     break;
                 case 0xB:
                     // BCLR RG,M
+                    temp = RG;
+                    if (RG == 3) {
+                        // WRFLAGS bit 1
+                        if ((state.mem[WRFLAGS] & 0x2) != 0) {
+                            // alternate OUT location
+                            temp = 0xFA;
+                        } else {
+                            // OUT
+                            temp = 0x0A;
+                        }
+                    }
+                    ns.mem[temp] = ns.mem[temp] & (0xF ^ (1 << M));
                     break;
                 case 0xC:
                     // BTG RG,M
+                    temp = RG;
+                    if (RG == 3) {
+                        // WRFLAGS bit 1
+                        if ((state.mem[WRFLAGS] & 0x2) != 0) {
+                            temp = 0xFA;
+                        } else {
+                            temp = 0x0A;
+                        }
+                    }
+                    ns.mem[temp] = ns.mem[temp] ^ (1 << M);
                     break;
                 case 0xD:
                     // RRC RY
