@@ -111,20 +111,40 @@ function advance(state) {
             // MOV RX,RY
             ns.mem[RX] = ry_val;
             if (RX == JSR) {
-                // TODO: jump subroutine to PCH/PCM/JSR
+                // jump subroutine to PCH/PCM/JSR (CALL)
+                ns.mem[0x10 + state.sp * 3] = ns.pc & 0b1111;
+                ns.mem[0x11 + state.sp * 3] = (ns.pc >> 4) & 0b1111;
+                ns.mem[0x12 + state.sp * 3] = (ns.pc >> 8) & 0b1111;
+                ns.sp = 0b111 & (ns.sp + 0b1); // add 1
+                ns.pc = (ns.mem[JSR] |
+                    (ns.mem[PCM] << 4) |
+                    (ns.mem[PCH] << 8));
             }
             if (RX == PCL) {
-                // TODO: jump long to PCH/PCM/PCL?
+                // jump long to PCH/PCM/PCL
+                ns.pc = (ns.mem[PCL] |
+                    (ns.mem[PCM] << 4) |
+                    (ns.mem[PCH] << 8));
             }
             break;
         case 9:
             // MOV RX,#N
             ns.mem[RX] = RY;
             if (RX == JSR) {
-                // TODO: jump subroutine to PCH/PCM/JSR
+                // jump subroutine to PCH/PCM/JSR (CALL)
+                ns.mem[0x10 + state.sp * 3] = ns.pc & 0b1111;
+                ns.mem[0x11 + state.sp * 3] = (ns.pc >> 4) & 0b1111;
+                ns.mem[0x12 + state.sp * 3] = (ns.pc >> 8) & 0b1111;
+                ns.sp = 0b111 & (ns.sp + 0b1); // add 1
+                ns.pc = (ns.mem[JSR] |
+                    (ns.mem[PCM] << 4) |
+                    (ns.mem[PCH] << 8));
             }
             if (RX == PCL) {
-                // TODO: jump long to PCH/PCM/PCL?
+                // jump long to PCH/PCM/PCL
+                ns.pc = (ns.mem[PCL] |
+                    (ns.mem[PCM] << 4) |
+                    (ns.mem[PCH] << 8));
             }
             break;
         case 0xA:
@@ -182,6 +202,22 @@ function advance(state) {
                     ns.mem[RY] = temp & 0xF;
                     ns.z = ns.mem[RY] === 0 ? 1 : 0;
                     ns.c = temp > 0xF ? 1 : 0;
+                    if (RX == JSR) {
+                        // jump subroutine to PCH/PCM/JSR (CALL)
+                        ns.mem[0x10 + state.sp * 3] = ns.pc & 0b1111;
+                        ns.mem[0x11 + state.sp * 3] = (ns.pc >> 4) & 0b1111;
+                        ns.mem[0x12 + state.sp * 3] = (ns.pc >> 8) & 0b1111;
+                        ns.sp = 0b111 & (ns.sp + 0b1); // add 1
+                        ns.pc = (ns.mem[JSR] |
+                            (ns.mem[PCM] << 4) |
+                            (ns.mem[PCH] << 8));
+                    }
+                    if (RX == PCL) {
+                        // jump long to PCH/PCM/PCL
+                        ns.pc = (ns.mem[PCL] |
+                            (ns.mem[PCM] << 4) |
+                            (ns.mem[PCH] << 8));
+                    }
                     break;
                 case 3:
                     // DEC RY
@@ -189,6 +225,22 @@ function advance(state) {
                     ns.mem[RY] = temp;
                     ns.z = temp === 0 ? 1 : 0;
                     ns.c = temp === 0b1111 ? 0 : 1;
+                    if (RX == JSR) {
+                        // jump subroutine to PCH/PCM/JSR (CALL)
+                        ns.mem[0x10 + state.sp * 3] = ns.pc & 0b1111;
+                        ns.mem[0x11 + state.sp * 3] = (ns.pc >> 4) & 0b1111;
+                        ns.mem[0x12 + state.sp * 3] = (ns.pc >> 8) & 0b1111;
+                        ns.sp = 0b111 & (ns.sp + 0b1); // add 1
+                        ns.pc = (ns.mem[JSR] |
+                            (ns.mem[PCM] << 4) |
+                            (ns.mem[PCH] << 8));
+                    }
+                    if (RX == PCL) {
+                        // jump long to PCH/PCM/PCL
+                        ns.pc = (ns.mem[PCL] |
+                            (ns.mem[PCM] << 4) |
+                            (ns.mem[PCH] << 8));
+                    }
                     break;
                 case 4:
                     // DSZ RY

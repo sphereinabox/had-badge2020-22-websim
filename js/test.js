@@ -9,11 +9,20 @@ function test_setup() {
     };
 }
 
+function pp(n) {
+    // return 0bNNNN_NNNN_NNNN formatted number n
+    return ('0b' +
+        ((n & 0xF00) >> 8).toString(2).padStart(4, '0') + '_' +
+        ((n & 0x0F0) >> 4).toString(2).padStart(4, '0') + '_' +
+        (n & 0xF).toString(2).padStart(4, '0'));
+}
+
 function assert_equal(a, b, msg) {
     if (a === b) {
 
     } else {
-        console.trace(a, b, msg);
+        console.trace(pp(a), pp(b), msg);
+        // console.trace(a, b, msg);
         test_state.test_pass = false;
     }
 }
@@ -690,6 +699,164 @@ add_test("op0.15 SKIP F,M", function () {
     assert_equal(test_state.state_after.c, 0);
     assert_equal(test_state.state_after.z, 1);
     assert_equal(test_state.state_after.v, 0);
+});
+
+
+
+add_test("op8 MOV RX,RY", function () {
+    // long jump
+    // MOV PCL,R4
+    var pc = 0b0101_0110_0011;
+    test_state.state.pc = pc;
+    test_state.state.code[pc] = 0b1000_1101_0100;
+    test_state.state.mem[R4] = 0b1001;
+    test_state.state.mem[PCH] = 0b0001;
+    test_state.state.mem[PCM] = 0b0010;
+    test_state.state.mem[PCL] = 0b0100;
+    test_state.state.mem[JSR] = 0b1111;
+    // something already on stack below and above
+    test_state.state.sp = 1;
+    test_state.state.mem[0x10] = 0b1100;
+    test_state.state.mem[0x11] = 0b1010;
+    test_state.state.mem[0x12] = 0b0011;
+    test_state.state.mem[0x13] = 0b0001;
+    test_state.state.mem[0x14] = 0b0010;
+    test_state.state.mem[0x15] = 0b0100;
+    test_state.state.c = 1;
+    test_state.state.z = 1;
+    test_state.state.v = 1;
+    test_advance();
+    assert_equal(test_state.state_after.pc, 0b0001_0010_1001);
+    assert_equal(test_state.state_after.mem[JSR], 0b1111);
+    assert_equal(test_state.state_after.mem[PCL], 0b1001);
+    // existing stack values don't change
+    assert_equal(test_state.state_after.sp, 1);
+    assert_equal(test_state.state_after.mem[0x10], 0b1100);
+    assert_equal(test_state.state_after.mem[0x11], 0b1010);
+    assert_equal(test_state.state_after.mem[0x12], 0b0011);
+    assert_equal(test_state.state_after.mem[0x13], 0b0001);
+    assert_equal(test_state.state_after.mem[0x14], 0b0010);
+    assert_equal(test_state.state_after.mem[0x15], 0b0100);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 1);
+});
+
+add_test("op8 MOV RX,RY", function () {
+    // CALL
+    // MOV JSR,R4
+    var pc = 0b0101_0110_0011;
+    test_state.state.pc = pc;
+    test_state.state.code[pc] = 0b1000_1100_0100;
+    test_state.state.mem[R4] = 0b1001;
+    test_state.state.mem[PCH] = 0b0001;
+    test_state.state.mem[PCM] = 0b0010;
+    test_state.state.mem[PCL] = 0b0100;
+    test_state.state.mem[JSR] = 0b1111;
+    // something already on stack below and above
+    test_state.state.sp = 1;
+    test_state.state.mem[0x10] = 0b1100;
+    test_state.state.mem[0x11] = 0b1010;
+    test_state.state.mem[0x12] = 0b0011;
+    test_state.state.mem[0x13] = 0b0001;
+    test_state.state.mem[0x14] = 0b0010;
+    test_state.state.mem[0x15] = 0b0100;
+    test_state.state.c = 1;
+    test_state.state.z = 1;
+    test_state.state.v = 1;
+    test_advance();
+    assert_equal(test_state.state_after.pc, 0b0001_0010_1001);
+    assert_equal(test_state.state_after.mem[JSR], 0b1001);
+    assert_equal(test_state.state_after.mem[PCL], 0b0100);
+    // existing stack values don't change
+    assert_equal(test_state.state_after.sp, 2);
+    assert_equal(test_state.state_after.mem[0x10], 0b1100);
+    assert_equal(test_state.state_after.mem[0x11], 0b1010);
+    assert_equal(test_state.state_after.mem[0x12], 0b0011);
+    // the next instruction after where we called from
+    assert_equal(test_state.state_after.mem[0x13], 0b0100);
+    assert_equal(test_state.state_after.mem[0x14], 0b0110);
+    assert_equal(test_state.state_after.mem[0x15], 0b0101);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 1);
+});
+
+add_test("op9 MOV RX,#N", function () {
+    // long jump
+    // MOV PCL,#9
+    var pc = 0b0101_0110_0011;
+    test_state.state.pc = pc;
+    test_state.state.code[pc] = 0b1001_1101_1001;
+    test_state.state.mem[PCH] = 0b0001;
+    test_state.state.mem[PCM] = 0b0010;
+    test_state.state.mem[PCL] = 0b0100;
+    test_state.state.mem[JSR] = 0b1111;
+    // something already on stack below and above
+    test_state.state.sp = 1;
+    test_state.state.mem[0x10] = 0b1100;
+    test_state.state.mem[0x11] = 0b1010;
+    test_state.state.mem[0x12] = 0b0011;
+    test_state.state.mem[0x13] = 0b0001;
+    test_state.state.mem[0x14] = 0b0010;
+    test_state.state.mem[0x15] = 0b0100;
+    test_state.state.c = 1;
+    test_state.state.z = 1;
+    test_state.state.v = 1;
+    test_advance();
+    assert_equal(test_state.state_after.pc, 0b0001_0010_1001);
+    assert_equal(test_state.state_after.mem[JSR], 0b1111);
+    assert_equal(test_state.state_after.mem[PCL], 0b1001);
+    // existing stack values don't change
+    assert_equal(test_state.state_after.sp, 1);
+    assert_equal(test_state.state_after.mem[0x10], 0b1100);
+    assert_equal(test_state.state_after.mem[0x11], 0b1010);
+    assert_equal(test_state.state_after.mem[0x12], 0b0011);
+    assert_equal(test_state.state_after.mem[0x13], 0b0001);
+    assert_equal(test_state.state_after.mem[0x14], 0b0010);
+    assert_equal(test_state.state_after.mem[0x15], 0b0100);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 1);
+});
+
+add_test("op9 MOV RX,#N", function () {
+    // CALL
+    // MOV JSR,#9
+    var pc = 0b0101_0110_0011;
+    test_state.state.pc = pc;
+    test_state.state.code[pc] = 0b1001_1100_1001;
+    test_state.state.mem[PCH] = 0b0001;
+    test_state.state.mem[PCM] = 0b0010;
+    test_state.state.mem[PCL] = 0b0100;
+    test_state.state.mem[JSR] = 0b1111;
+    // something already on stack below and above
+    test_state.state.sp = 1;
+    test_state.state.mem[0x10] = 0b1100;
+    test_state.state.mem[0x11] = 0b1010;
+    test_state.state.mem[0x12] = 0b0011;
+    test_state.state.mem[0x13] = 0b0001;
+    test_state.state.mem[0x14] = 0b0010;
+    test_state.state.mem[0x15] = 0b0100;
+    test_state.state.c = 1;
+    test_state.state.z = 1;
+    test_state.state.v = 1;
+    test_advance();
+    assert_equal(test_state.state_after.pc, 0b0001_0010_1001);
+    assert_equal(test_state.state_after.mem[JSR], 0b1001);
+    assert_equal(test_state.state_after.mem[PCL], 0b0100);
+    // existing stack values don't change
+    assert_equal(test_state.state_after.sp, 2);
+    assert_equal(test_state.state_after.mem[0x10], 0b1100);
+    assert_equal(test_state.state_after.mem[0x11], 0b1010);
+    assert_equal(test_state.state_after.mem[0x12], 0b0011);
+    // the next instruction after where we called from
+    assert_equal(test_state.state_after.mem[0x13], 0b0100);
+    assert_equal(test_state.state_after.mem[0x14], 0b0110);
+    assert_equal(test_state.state_after.mem[0x15], 0b0101);
+    assert_equal(test_state.state_after.c, 1);
+    assert_equal(test_state.state_after.z, 1);
+    assert_equal(test_state.state_after.v, 1);
 });
 
 var consoletext_element = document.getElementById("consoletext");
