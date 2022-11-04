@@ -10,6 +10,8 @@ function test_setup() {
 }
 
 function pp(n) {
+    if (typeof (n) == 'string')
+        return n;
     // return 0bNNNN_NNNN_NNNN formatted number n
     return ('0b' +
         ((n & 0xF00) >> 8).toString(2).padStart(4, '0') + '_' +
@@ -701,8 +703,6 @@ add_test("op0.15 SKIP F,M", function () {
     assert_equal(test_state.state_after.v, 0);
 });
 
-
-
 add_test("op8 MOV RX,RY", function () {
     // long jump
     // MOV PCL,R4
@@ -857,6 +857,53 @@ add_test("op9 MOV RX,#N", function () {
     assert_equal(test_state.state_after.c, 1);
     assert_equal(test_state.state_after.z, 1);
     assert_equal(test_state.state_after.v, 1);
+});
+
+
+add_test("format_number", function () {
+    assert_equal(format_number(15), "2_1111");
+    assert_equal(format_number(0), "2_0000");
+    assert_equal(format_number(255), "0xFF");
+});
+
+add_test("parse_number", function () {
+    function test(str, expected_num) {
+        assert_equal(parse_number(str), expected_num, str);
+    }
+    // binary
+    test("0B1111", 15);
+    test("0B11111111", 255);
+    test("0B0000", 0);
+    test("0B00000000", 0);
+    test("0B0", 0);
+    test("0b1111", 15);
+    test("0b0000", 0);
+    test("0b0", 0);
+    test("2_1111", 15);
+    test("2_0000", 0);
+    test("2_0", 0);
+
+    // hex
+    test("0xF", 15);
+    test("0xf", 15);
+    test("0xFF", 255);
+    test("0xff", 255);
+    test("0x0", 0);
+    test("0x00", 0);
+    test("0XF", 15);
+    test("0X0", 0);
+    test("16_F", 15);
+    test("16_0", 0);
+
+    // decimal
+    test("10_15", 15);
+    test("10_255", 255);
+    test("10_0", 0);
+    test("10_09", 9);
+    test("10_009", 9);
+    test("15", 15);
+    test("0", 0);
+    test("09", 9);
 });
 
 var consoletext_element = document.getElementById("consoletext");
